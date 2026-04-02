@@ -52,7 +52,7 @@ export default function TMPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-7xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader
             title="Turing Machine"
             subtitle="Watch the infinite tape dance as your TM computes"
@@ -97,7 +97,7 @@ export default function TMPage() {
             </div>
           </Card>
 
-          <div className="flex flex-col lg:flex-row justify-center items-stretch gap-6 w-full">
+          <div className="flex flex-col lg:flex-row items-stretch gap-6 w-full">
             {/* Controls */}
             <Card className="flex-1 w-full lg:max-w-sm">
               <Select

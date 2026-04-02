@@ -51,7 +51,7 @@ export default function PumpingPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-5xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-5xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader title="Pumping Lemma" subtitle="Prove languages are non-regular using contradiction" badge="Proof Tool" />
 
           <Card className="mb-6">

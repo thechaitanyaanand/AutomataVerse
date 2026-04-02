@@ -101,7 +101,7 @@ export default function NFAPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-7xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader
             title="NFA & Subset Construction"
             subtitle="Build NFAs and watch them transform into equivalent DFAs"

@@ -26,7 +26,7 @@ export default function PDAPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-7xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader
             title="Pushdown Automata"
             subtitle="Simulate PDAs with animated stack operations"

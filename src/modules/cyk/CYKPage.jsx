@@ -35,7 +35,7 @@ export default function CYKPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-6xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-6xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader title="CYK Parser" subtitle="Parse context-free grammars with the CYK algorithm" badge="Parsing" />
 
           <Card className="mb-6">

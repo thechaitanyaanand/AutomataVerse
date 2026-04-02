@@ -113,7 +113,7 @@ export default function QuizPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-4xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-4xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader title="Quiz Mode" subtitle="Test your TOC knowledge" badge="Challenge" />
 
           <div className="grid md:grid-cols-4 gap-6 mb-6">

@@ -28,7 +28,7 @@ export default function ChomskyPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-5xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-5xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader
             title="The Chomsky Hierarchy"
             subtitle="Four levels of formal grammars and their computational power"

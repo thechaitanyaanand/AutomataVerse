@@ -102,7 +102,7 @@ export default function DFAPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-7xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader
             title="DFA Simulator"
             subtitle="Build, visualize, and simulate Deterministic Finite Automata"
@@ -122,9 +122,9 @@ export default function DFAPage() {
             </div>
           </Card>
 
-          <div className="flex flex-col lg:flex-row justify-center items-start gap-8 w-full">
+          <div className="flex flex-col lg:flex-row gap-8 w-full">
             {/* Graph Canvas — Main Area */}
-            <div className="flex-1 w-full max-w-5xl space-y-4">
+            <div className="flex-1 min-w-0 space-y-4">
               <AutomataGraph
                 nodes={nodes}
                 edges={edges}

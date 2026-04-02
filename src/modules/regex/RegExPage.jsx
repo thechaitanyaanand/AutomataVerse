@@ -82,7 +82,7 @@ export default function RegExPage() {
     <>
       <Navbar />
       <PageWrapper>
-        <div className="max-w-screen-2xl mx-auto px-8 lg:px-12 py-10">
+        <div className="max-w-7xl mx-auto px-8 lg:px-12 py-10 w-full">
           <SectionHeader
             title="Regular Expressions"
             subtitle="Thompson's Construction: convert regular expressions to NFAs"

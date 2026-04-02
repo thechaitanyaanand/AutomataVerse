@@ -7,7 +7,7 @@ export default function PageWrapper({ children, className = '' }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className={`min-h-screen pt-20 bg-grid ${className}`}
+      className={`min-h-screen pt-20 bg-grid w-full ${className}`}
     >
       {children}
     </motion.div>

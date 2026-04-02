@@ -45,7 +45,7 @@ export default function Landing() {
       <Navbar />
 
       {/* ══════ HERO ══════ */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center overflow-hidden w-full">
         {/* Parallax Background Image */}
         <motion.div 
           className="absolute inset-0 z-0" 
@@ -67,89 +67,80 @@ export default function Landing() {
 
         <div className="absolute inset-0 bg-grid opacity-30 z-0" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full">
-          <div className="grid lg:grid-cols-2 gap-16 items-center min-h-[90vh] py-24">
-            {/* Left: Text */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 lg:px-8 w-full text-center">
+          <div className="flex flex-col items-center justify-center min-h-[85vh] py-20 relative">
+            
+            {/* Centered Text Content */}
             <motion.div
               style={{ y: textY }}
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative z-20"
+              className="relative z-20 flex flex-col items-center"
             >
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium
-                  bg-flora/10 text-flora-light border border-flora/20 mb-8"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold
+                  bg-flora/10 text-flora-light border border-flora/20 mb-8 uppercase tracking-widest shadow-[0_0_20px_rgba(232,69,155,0.2)]"
               >
-                <Flower2 size={14} />
+                <Flower2 size={16} className="text-flora" />
                 Interactive Theory of Computation
               </motion.div>
 
-              <h1 className="font-display text-[3.5rem] sm:text-[4.5rem] lg:text-[5.5rem] text-text-primary leading-[1.05] mb-8 tracking-tight">
-                <motion.span className="block" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>Formal</motion.span>
-                <motion.span className="block" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>Languages,</motion.span>
-                <motion.span className="block gradient-text" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>Made Visual.</motion.span>
+              <h1 className="font-display text-[4rem] sm:text-[5.5rem] lg:text-[7rem] text-text-primary leading-[1.05] mb-8 tracking-tight">
+                <motion.span className="block" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>Formal Languages,</motion.span>
+                <motion.span className="block gradient-text drop-shadow-[0_0_30px_rgba(232,69,155,0.4)]" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>Made Visual.</motion.span>
               </h1>
 
               <motion.p
-                className="text-text-secondary text-lg sm:text-xl max-w-lg mb-10 leading-relaxed"
+                className="text-text-secondary text-lg sm:text-2xl max-w-2xl mb-12 leading-relaxed"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
               >
                 Explore DFAs, NFAs, Turing Machines, and the Chomsky hierarchy through
                 stunning interactive visualizations. Learn by doing.
               </motion.p>
 
-              <motion.div className="flex flex-wrap gap-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
+              <motion.div className="flex flex-wrap justify-center gap-4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                 <Link to="/dfa">
-                  <Button variant="primary" size="lg" className="text-base px-8 py-3.5">
-                    Start Exploring
-                    <ArrowRight size={18} />
+                  <Button variant="primary" size="lg" className="text-base px-10 py-4 shadow-[0_0_30px_rgba(232,69,155,0.3)]">
+                    Start Exploring <ArrowRight size={18} />
                   </Button>
                 </Link>
                 <Link to="/chomsky">
-                  <Button variant="secondary" size="lg" className="text-base px-8 py-3.5">
+                  <Button variant="secondary" size="lg" className="text-base px-10 py-4 glass-strong text-white border-white/20 hover:bg-white/10">
                     View Hierarchy
                   </Button>
                 </Link>
               </motion.div>
 
               <motion.div
-                className="flex items-center gap-8 mt-14 text-sm text-text-muted"
+                className="flex items-center justify-center gap-10 mt-16 text-sm text-text-muted"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
               >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald animate-pulse" />
-                  <span>9 Interactive Modules</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-emerald animate-pulse" />
+                  <span className="font-medium tracking-wide">9 Interactive Modules</span>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-flora animate-pulse" />
-                  <span>Real-time Simulation</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full bg-flora animate-pulse" />
+                  <span className="font-medium tracking-wide">Real-time Simulation</span>
                 </div>
               </motion.div>
             </motion.div>
 
-            {/* Right: 3D Canvas */}
+            {/* Background 3D Canvas (Repositioned to act as a magical backdrop/bottom layer) */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.2, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="h-[500px] lg:h-[650px] hidden md:block relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.5, delay: 0.8 }}
+              className="absolute inset-0 z-0 h-[80vh] w-full pointer-events-none flex items-center justify-center opacity-40 mt-32"
             >
-              {/* Glow halo behind canvas */}
-              <div className="absolute inset-0 blur-3xl opacity-20" style={{
-                background: 'radial-gradient(circle at 50% 50%, #E8459B 0%, transparent 50%)'
+              <div className="absolute inset-0 blur-3xl" style={{
+                background: 'radial-gradient(ellipse at 50% 50%, #E8459B44 0%, transparent 60%)'
               }} />
-              <Suspense fallback={
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto rounded-full border-2 border-flora/30 border-t-flora animate-spin mb-4" />
-                    <p className="text-sm text-text-muted font-display">Blooming...</p>
-                  </div>
-                </div>
-              }>
+              <Suspense fallback={null}>
                 <HeroCanvas />
               </Suspense>
             </motion.div>

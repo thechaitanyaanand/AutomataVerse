@@ -1,0 +1,204 @@
+@import "tailwindcss";
+
+@theme {
+  /* === LUSH FOREST PALETTE === */
+  --color-void: #040A06;
+  --color-surface: #081410;
+  --color-panel: #0C1E14;
+  --color-border: #1A3828;
+  --color-border-light: #255038;
+
+  /* Floral accent — warm magenta/pink */
+  --color-flora: #E8459B;
+  --color-flora-light: #F584BF;
+  --color-flora-glow: #E8459B33;
+  --color-flora-deep: #B5307A;
+
+  /* Secondary accent — golden amber */
+  --color-gold: #F0A830;
+  --color-gold-light: #F5C96A;
+  --color-gold-glow: #F0A83033;
+
+  /* Tertiary — emerald */
+  --color-emerald: #34D399;
+  --color-emerald-light: #6EE7B7;
+  --color-emerald-deep: #059669;
+
+  /* Leaf green */
+  --color-leaf: #4ADE80;
+  --color-leaf-deep: #166534;
+
+  /* Text */
+  --color-text-primary: #F0FFF4;
+  --color-text-secondary: #94B8A0;
+  --color-text-muted: #4A6B55;
+
+  /* Semantic */
+  --color-success: #34D399;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
+
+  /* Legacy aliases for components that reference old names */
+  --color-violet: #E8459B;
+  --color-violet-light: #F584BF;
+  --color-violet-deep: #B5307A;
+  --color-cyan: #34D399;
+  --color-cyan-light: #6EE7B7;
+
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ===== BASE RESET ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 16px;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ===== ORGANIC GRID BACKGROUND ===== */
+.bg-grid {
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(52,211,153,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(232,69,155,0.03) 0%, transparent 50%),
+    linear-gradient(rgba(52,211,153,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52,211,153,0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+}
+
+/* ===== GLASSMORPHISM ===== */
+.glass {
+  background: rgba(12, 30, 20, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(52,211,153,0.1);
+}
+
+.glass-strong {
+  background: rgba(12, 30, 20, 0.8);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(52,211,153,0.15);
+}
+
+/* ===== GLOW EFFECTS ===== */
+.glow-flora {
+  box-shadow: 0 0 30px rgba(232,69,155,0.25), 0 0 80px rgba(232,69,155,0.08);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 30px rgba(52,211,153,0.25), 0 0 80px rgba(52,211,153,0.08);
+}
+
+.glow-gold {
+  box-shadow: 0 0 30px rgba(240,168,48,0.25), 0 0 80px rgba(240,168,48,0.08);
+}
+
+/* ===== GRADIENT ===== */
+.gradient-text {
+  background: linear-gradient(135deg, #E8459B 0%, #F0A830 40%, #34D399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-flora {
+  background: linear-gradient(135deg, #E8459B, #F0A830);
+}
+
+.gradient-forest {
+  background: linear-gradient(135deg, #059669, #34D399);
+}
+
+/* ===== TYPOGRAPHY ===== */
+.font-display { font-family: var(--font-display); }
+.font-body { font-family: var(--font-body); }
+.font-mono { font-family: var(--font-mono); }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-void); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-emerald-deep); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-2deg) translateX(0); }
+  50% { transform: rotate(2deg) translateX(5px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(232,69,155,0.2); }
+  50% { box-shadow: 0 0 40px rgba(232,69,155,0.5), 0 0 80px rgba(232,69,155,0.15); }
+}
+
+@keyframes petalDrift {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-sway { animation: sway 4s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
+
+/* ===== SELECTION ===== */
+::selection {
+  background: rgba(232,69,155,0.3);
+  color: #F0FFF4;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-flora);
+  outline-offset: 2px;
+}
+
+/* ===== KaTeX ===== */
+.katex { font-size: 1.1em !important; color: var(--color-text-primary) !important; }
+.katex-display { margin: 1em 0 !important; }
+
+/* ===== PETAL PARTICLES ===== */
+.petal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  animation: petalDrift linear infinite;
+  opacity: 0;
+}

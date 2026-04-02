@@ -15,6 +15,8 @@ import { parseRegex, ParseError } from '@/lib/regex-parser';
 import { regexToNFA } from '@/lib/thompson';
 
 import useAppStore from '@/store/useAppStore';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 
 export default function RegExPage() {
   const [regex, setRegex] = useState('a(b|c)*');
@@ -48,7 +50,13 @@ export default function RegExPage() {
       accepted: last?.accepted ?? false,
       steps,
     });
-    completeModule('/regex');
+    if (last?.accepted) {
+      audio.playSuccess();
+      fireConfetti();
+      completeModule('/regex');
+    } else {
+      audio.playError();
+    }
   };
 
   // Build graph data from NFA

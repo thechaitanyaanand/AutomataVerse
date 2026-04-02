@@ -15,6 +15,8 @@ import MathDisplay from '@/components/ui/MathDisplay';
 import TMTape3D from '@/components/three/TMTape3D';
 import useTMStore, { TM_EXAMPLES } from '@/store/useTMStore';
 import useAppStore from '@/store/useAppStore';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 
 export default function TMPage() {
   const {
@@ -36,9 +38,22 @@ export default function TMPage() {
   useEffect(() => {
     if (simulation?.status === 'done') {
       setPlaying(false);
-      completeModule('/turing');
+      const isAccept = simulation.steps[simulation.currentStep]?.isAccepting;
+      if (isAccept) {
+        audio.playSuccess();
+        fireConfetti();
+        completeModule('/turing');
+      } else {
+        audio.playError();
+      }
     }
-  }, [simulation?.status, setPlaying, completeModule]);
+  }, [simulation?.status, simulation?.currentStep, simulation?.steps, setPlaying, completeModule]);
+
+  useEffect(() => {
+    if (simulation?.currentStep > 0 && simulation?.status !== 'done') {
+      audio.playTick();
+    }
+  }, [simulation?.currentStep, simulation?.status]);
 
   const example = TM_EXAMPLES[selectedExample];
   const step = simulation?.steps?.[simulation.currentStep];

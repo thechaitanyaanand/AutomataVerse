@@ -9,6 +9,8 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import useAppStore from '@/store/useAppStore';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 import { DFA } from '@/lib/dfa';
 
 function generateRandomDFA() {
@@ -84,13 +86,18 @@ export default function QuizPage() {
     if (option === current.answer) {
       setCorrect(c => c + 1);
       addQuizScore(10);
+      audio.playSuccess();
+    } else {
+      audio.playError();
     }
   };
 
   const next = () => {
     if (currentIdx < questions.length - 1) {
+      audio.playTick();
       setCurrentIdx(i => i + 1);
     } else {
+      fireConfetti();
       setQuestions(Array.from({ length: 5 }, generateQuestion));
       setCurrentIdx(0);
       useAppStore.getState().completeModule('/quiz');

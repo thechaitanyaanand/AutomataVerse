@@ -12,6 +12,8 @@ import Badge from '@/components/ui/Badge';
 import MathDisplay from '@/components/ui/MathDisplay';
 import { BUILTIN_LANGUAGES, verifyPumpingDecomposition, generatePumpingChallenge } from '@/lib/pumping';
 import useAppStore from '@/store/useAppStore';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 
 export default function PumpingPage() {
   const [langId, setLangId] = useState('a_n_b_n');
@@ -38,7 +40,13 @@ export default function PumpingPage() {
     const z = w.slice(xLen + yLen);
     const res = verifyPumpingDecomposition(langId, challenge.pumpingLength, w, { x, y, z });
     setResult(res);
-    if (res.valid) completeModule('/pumping');
+    if (res.valid) {
+      audio.playSuccess();
+      fireConfetti();
+      completeModule('/pumping');
+    } else {
+      audio.playError();
+    }
   };
 
   const word = challenge?.word || '';

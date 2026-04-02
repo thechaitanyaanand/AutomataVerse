@@ -12,6 +12,8 @@ import Badge from '@/components/ui/Badge';
 import MathDisplay from '@/components/ui/MathDisplay';
 import { cyk } from '@/lib/cyk';
 import useAppStore from '@/store/useAppStore';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 
 const DEFAULT_GRAMMAR = { start: 'S', productions: new Map([['S', [['A', 'B'], 'c']], ['A', ['a', ['A', 'A']]], ['B', ['b', ['B', 'B']]]]) };
 const ANBN_GRAMMAR = { start: 'S', productions: new Map([['S', [['A', 'B'], ['A', 'C']]], ['A', ['a']], ['B', ['b']], ['C', [['S', 'B']]]]) };
@@ -26,7 +28,13 @@ export default function CYKPage() {
     const res = cyk(ANBN_GRAMMAR, inputStr);
     setResult(res);
     setActiveCell(null);
-    completeModule('/cyk');
+    if (res.accepted) {
+      audio.playSuccess();
+      fireConfetti();
+      completeModule('/cyk');
+    } else {
+      audio.playError();
+    }
   };
 
   const n = inputStr.length;

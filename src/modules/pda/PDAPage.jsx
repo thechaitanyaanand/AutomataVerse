@@ -12,6 +12,8 @@ import AutomataGraph from '@/components/graph/AutomataGraph';
 import MathDisplay from '@/components/ui/MathDisplay';
 import usePDAStore from '@/store/usePDAStore';
 import useAppStore from '@/store/useAppStore';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 import { Play } from 'lucide-react';
 
 export default function PDAPage() {
@@ -96,6 +98,8 @@ export default function PDAPage() {
                   </div>
                 </div>
                 <Button className="w-full" size="lg" onClick={() => {
+                  audio.playSuccess();
+                  fireConfetti();
                   completeModule('/pda');
                   // further simulation logic when implemented
                 }}>

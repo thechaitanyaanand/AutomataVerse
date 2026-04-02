@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
 const Landing = lazy(() => import('./pages/Landing'));
@@ -26,25 +26,34 @@ function PageLoader() {
   );
 }
 
+
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Landing />} />
+        <Route path="/dfa" element={<DFAPage />} />
+        <Route path="/nfa" element={<NFAPage />} />
+        <Route path="/regex" element={<RegExPage />} />
+        <Route path="/pda" element={<PDAPage />} />
+        <Route path="/turing" element={<TMPage />} />
+        <Route path="/chomsky" element={<ChomskyPage />} />
+        <Route path="/pumping" element={<PumpingPage />} />
+        <Route path="/cyk" element={<CYKPage />} />
+        <Route path="/quiz" element={<QuizPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/dfa" element={<DFAPage />} />
-            <Route path="/nfa" element={<NFAPage />} />
-            <Route path="/regex" element={<RegExPage />} />
-            <Route path="/pda" element={<PDAPage />} />
-            <Route path="/turing" element={<TMPage />} />
-            <Route path="/chomsky" element={<ChomskyPage />} />
-            <Route path="/pumping" element={<PumpingPage />} />
-            <Route path="/cyk" element={<CYKPage />} />
-            <Route path="/quiz" element={<QuizPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AnimatePresence>
+        <AnimatedRoutes />
       </Suspense>
     </BrowserRouter>
   );

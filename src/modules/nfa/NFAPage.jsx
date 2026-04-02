@@ -17,6 +17,8 @@ import MathDisplay from '@/components/ui/MathDisplay';
 import useAppStore from '@/store/useAppStore';
 import useNFAStore from '@/store/useNFAStore';
 import { nfaToDfa, setKey } from '@/lib/subset-construction';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 
 export default function NFAPage() {
   const store = useNFAStore();
@@ -55,9 +57,22 @@ export default function NFAPage() {
   useEffect(() => {
     if (simulation?.status === 'done') {
       setIsPlaying(false);
-      completeModule('/nfa');
+      const isAccept = simulation.steps[simulation.currentStep]?.isAccepting;
+      if (isAccept) {
+        audio.playSuccess();
+        fireConfetti();
+        completeModule('/nfa');
+      } else {
+        audio.playError();
+      }
     }
-  }, [simulation?.status, completeModule]);
+  }, [simulation?.status, simulation?.currentStep, simulation?.steps, completeModule]);
+
+  useEffect(() => {
+    if (simulation?.currentStep > 0 && simulation?.status !== 'done') {
+      audio.playTick();
+    }
+  }, [simulation?.currentStep, simulation?.status]);
 
   const runSubsetConstruction = () => {
     const nfa = buildNFA();

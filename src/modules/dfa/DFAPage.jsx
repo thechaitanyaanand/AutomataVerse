@@ -16,6 +16,8 @@ import SimulationControls from '@/components/graph/SimulationControls';
 import useDFAStore, { DFA_EXAMPLES } from '@/store/useDFAStore';
 import useAppStore from '@/store/useAppStore';
 import MathDisplay from '@/components/ui/MathDisplay';
+import { fireConfetti } from '@/lib/confetti';
+import { audio } from '@/lib/audio';
 
 export default function DFAPage() {
   const store = useDFAStore();
@@ -53,9 +55,23 @@ export default function DFAPage() {
   useEffect(() => {
     if (simulation?.status === 'done') {
       setIsPlaying(false);
-      completeModule('/dfa');
+      const isAccept = simulation.steps[simulation.currentStep]?.isAccepting;
+      if (isAccept) {
+        audio.playSuccess();
+        fireConfetti();
+        completeModule('/dfa');
+      } else {
+        audio.playError();
+      }
     }
-  }, [simulation?.status, completeModule]);
+  }, [simulation?.status, simulation?.currentStep, simulation?.steps, completeModule]);
+
+  // Tick sound on step
+  useEffect(() => {
+    if (simulation?.currentStep > 0 && simulation?.status !== 'done') {
+      audio.playTick();
+    }
+  }, [simulation?.currentStep, simulation?.status]);
 
   // Load initial example
   useEffect(() => {

@@ -41,7 +41,6 @@ function Cell({ position, symbol, isHead, blankSymbol }) {
         color={textColor}
         anchorX="center"
         anchorY="middle"
-        font="https://fonts.gstatic.com/s/spacegrotesk/v15/V8mDoQDjQSkGpb8BK2VsZzdrW2g-Jjs.woff"
       >
         {symbol === blankSymbol ? '␣' : symbol}
       </Text>

@@ -1,0 +1,170 @@
+/* ═══════════════════════════════════════════════════════════════
+   CRT SHADER OVERLAY
+   A full-viewport, pointer-events-none layer that renders the
+   classic CRT phosphor / scanline look over every page.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Scanline roll animation ── */
+@keyframes crt-scan {
+  0% {
+    background-position: 0 0;
+  }
+
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+/* ── Phosphor flicker (very subtle) ── */
+@keyframes crt-flicker {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  41% {
+    opacity: 1;
+  }
+
+  42% {
+    opacity: 0.93;
+  }
+
+  43% {
+    opacity: 1;
+  }
+
+  61% {
+    opacity: 1;
+  }
+
+  62% {
+    opacity: 0.95;
+  }
+
+  63% {
+    opacity: 1;
+  }
+
+  91% {
+    opacity: 1;
+  }
+
+  92% {
+    opacity: 0.9;
+  }
+
+  93% {
+    opacity: 1;
+  }
+}
+
+/* ── Horizontal jitter (very subtle) ── */
+@keyframes crt-jitter {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10% {
+    transform: translateX(-0.5px);
+  }
+
+  30% {
+    transform: translateX(0.5px);
+  }
+
+  50% {
+    transform: translateX(-0.3px);
+  }
+
+  70% {
+    transform: translateX(0.3px);
+  }
+
+  90% {
+    transform: translateX(0);
+  }
+}
+
+/* ── The overlay itself ── */
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  /* Stacked layers, rear to front:
+     1. Scanlines — dark horizontal bands repeated every 3px
+     2. Moving bright roll line — slow downward sweep
+     3. Green phosphor tint — very faint colour wash
+     4. Vignette — round darkening at edges
+     5. Screen-edge glare — barely-visible white rim
+  */
+  background:
+    /* 1. Static scanlines */
+    repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.18) 2px,
+      rgba(0, 0, 0, 0.18) 3px),
+    /* 2. Slow-rolling bright sweep */
+    linear-gradient(to bottom,
+      transparent 0%,
+      rgba(52, 211, 153, 0.03) 50%,
+      transparent 100%),
+    /* 3. Phosphor green tint */
+    radial-gradient(ellipse at center,
+      rgba(52, 211, 153, 0.02) 0%,
+      transparent 75%),
+    /* 4. Vignette */
+    radial-gradient(ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.55) 100%);
+
+  background-size:
+    100% 3px,
+    /* scanlines tile height */
+    100% 250%,
+    /* roll-line: oversized so it sweeps */
+    100% 100%,
+    100% 100%;
+
+  /* Animate the roll-line layer (layer 2) only */
+  animation:
+    crt-scan 6s linear infinite,
+    crt-flicker 8s step-end infinite,
+    crt-jitter 0.1s linear infinite;
+
+  /* Screen edge RGB separation / bloom */
+  mix-blend-mode: screen;
+}
+
+/* ── Screen curvature illusion via edge distortion ── */
+.crt-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4% / 2.5%;
+  box-shadow:
+    /* Inward corner glow (phosphor edge) */
+    inset 0 0 80px 20px rgba(0, 0, 0, 0.6),
+    /* Outer bloom / glass reflection */
+    inset 0 0 3px 1px rgba(52, 211, 153, 0.08);
+  pointer-events: none;
+}
+
+/* ── Chromatic aberration stripe along the top ── */
+.crt-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+      rgba(232, 69, 155, 0.04) 0px,
+      rgba(52, 211, 153, 0.04) 1px,
+      transparent 3px);
+  background-size: 100% 3px;
+  pointer-events: none;
+}

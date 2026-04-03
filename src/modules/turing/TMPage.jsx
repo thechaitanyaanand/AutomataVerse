@@ -14,10 +14,34 @@ import Slider from '@/components/ui/Slider';
 import MathDisplay from '@/components/ui/MathDisplay';
 import TMTape3D from '@/components/three/TMTape3D';
 import TraceLog from '@/components/graph/TraceLog';
+import LessonPanel from '@/components/layout/LessonPanel';
 import useTMStore, { TM_EXAMPLES } from '@/store/useTMStore';
 import useAppStore from '@/store/useAppStore';
 import { fireConfetti } from '@/lib/confetti';
 import { audio } from '@/lib/audio';
+
+const TM_LESSONS = [
+  {
+    title: 'What is a Turing Machine?',
+    content: 'A **Turing Machine (TM)** is the most powerful theoretical model of computation. Unlike a DFA, it has an infinite **read-write tape**, and its read head can move both left and right.\n\nFormally, **M = (Q, \u03a3, \u0393, \u03b4, q\u2080, q_accept, q_reject)** where:\n- **\u0393** = tape alphabet (larger than input alphabet)\n- **\u03b4: Q \u00d7 \u0393 \u2192 Q \u00d7 \u0393 \u00d7 {L, R}** = transition (read, write, move)',
+  },
+  {
+    title: 'Observe the 3D Tape',
+    content: 'The **3D Tape** visualization shows you the actual tape at each step.\n\n- The **pink highlighted cell** is the current read/write head position.\n- Blank cells (\_) represent unwritten positions.\n- The head moves **L** (left) or **R** (right) after each operation.\n\nThe TM\'s power comes from this two-way infinite tape!',
+  },
+  {
+    title: 'Run the Palindrome Checker',
+    content: 'The default machine is a **Palindrome Checker**. It accepts strings over {a, b} that read the same forwards and backwards.\n\nType `abba` or `aba` in the input box and click **Run**. Then use the Playback controls to step through the computation one step at a time.',
+  },
+  {
+    title: 'Read the Transition Table',
+    content: 'The **Transition Function** table shows every rule. Each row is a tuple **(state, read) \u2192 (write, direction, next state)**.\n\nThe currently active rule is highlighted in **violet** as the simulation runs. This is the \u03b4 function in action!',
+  },
+  {
+    title: 'Church-Turing Thesis',
+    content: 'The **Church-Turing Thesis** states that anything computable by any algorithm can be computed by a Turing Machine.\n\nTry the **a\u207fb\u207f Recognizer** example \u2014 this language cannot be recognized by any DFA or NFA, but the Turing Machine handles it easily!',
+  },
+];
 
 export default function TMPage() {
   const {
@@ -59,6 +83,14 @@ export default function TMPage() {
   const example = TM_EXAMPLES[selectedExample];
   const step = simulation?.steps?.[simulation.currentStep];
 
+  const lessonCompleted = [
+    true,
+    true,
+    simulation !== null,
+    simulation?.status === 'done',
+    true,
+  ];
+
   const exampleOptions = Object.entries(TM_EXAMPLES).map(([key, val]) => ({
     value: key,
     label: val.name,
@@ -73,7 +105,14 @@ export default function TMPage() {
             title="Turing Machine"
             subtitle="Watch the infinite tape dance as your TM computes"
             badge="Computability"
+          />
 
+          <LessonPanel
+            title="Turing Machine \u2014 Guided Lesson"
+            description="Discover the most powerful model of computation"
+            steps={TM_LESSONS}
+            completedSteps={lessonCompleted}
+            onFinish={() => completeModule('/turing')}
           />
 
           <Card className="mb-6">

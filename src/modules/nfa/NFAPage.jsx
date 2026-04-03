@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Plus, Trash2 } from 'lucide-react';
 import PageWrapper from '@/components/layout/PageWrapper';
@@ -16,11 +16,36 @@ import TraceLog from '@/components/graph/TraceLog';
 import StringExplorer from '@/components/graph/StringExplorer';
 import SimulationControls from '@/components/graph/SimulationControls';
 import MathDisplay from '@/components/ui/MathDisplay';
+import LessonPanel from '@/components/layout/LessonPanel';
+import MachineGallery from '@/components/layout/MachineGallery';
 import useAppStore from '@/store/useAppStore';
 import useNFAStore from '@/store/useNFAStore';
 import { nfaToDfa, setKey } from '@/lib/subset-construction';
 import { fireConfetti } from '@/lib/confetti';
 import { audio } from '@/lib/audio';
+
+const NFA_LESSONS = [
+  {
+    title: 'NFA vs DFA — What is Non-determinism?',
+    content: `A **Non-deterministic Finite Automaton (NFA)** is like a DFA but it can *guess*. From a single state, reading a symbol, it may transition to **multiple states simultaneously** (or even spontaneously via **ε (epsilon)** transitions without reading anything).\n\nFormally: **δ: Q × (Σ ∪ {ε}) → P(Q)** (a *set* of states, not just one).\n\nAn NFA accepts a string if **at least one** computation path leads to an accept state.`,
+  },
+  {
+    title: 'Explore the NFA',
+    content: `The NFA canvas shows the same-style graph as the DFA. Look for states with **multiple outgoing edges** for the same symbol — that is non-determinism.\n\nIf there is an edge labeled **ε**, that is a free transition (epsilon move) that happens without consuming any input.`,
+  },
+  {
+    title: 'Run an NFA simulation',
+    content: `Type a string in the input box and click **Simulate** to run the NFA. The simulation tracks **all active states** at once, shown highlighted in the graph.\n\nThe Trace Log shows the set of active states at each step, reflecting the branching computation.`,
+  },
+  {
+    title: 'Convert to DFA with Subset Construction',
+    content: `Every NFA has an equivalent DFA! The conversion algorithm is called **Subset Construction** (or the Powerset construction).\n\nClick the **"Convert to DFA"** button. Each state in the resulting DFA represents a *set* of NFA states. The state mapping table shows this correspondence.`,
+  },
+  {
+    title: 'Compare NFA and DFA results',
+    content: `Use the **Dual Simulation** panel to test a string against both the NFA and its equivalent DFA simultaneously.\n\nBoth should always give the **same result** (accept or reject) — this is the fundamental theorem proven by the Subset Construction!`,
+  },
+];
 
 export default function NFAPage() {
   const store = useNFAStore();
@@ -130,6 +155,33 @@ export default function NFAPage() {
     return steps[steps.length - 1].accepted;
   }, [buildNFA]);
 
+  // Lesson completion tracking
+  const lessonCompleted = [
+    true, // Step 0: reading
+    nodes.length > 0, // Step 1: machine is visible
+    simulation !== null, // Step 2: ran simulation
+    subsetResult !== null, // Step 3: did subset construction
+    compareResult !== null, // Step 4: ran dual simulation
+  ];
+
+  // Snapshot helpers
+  const getSnapshot = useCallback(() => ({
+    nodes,
+    edges,
+  }), [nodes, edges]);
+
+  const loadSnapshot = useCallback((snapshot) => {
+    if (!snapshot) return;
+    clearAll();
+    snapshot.nodes.forEach(n => {
+      addState(n.id, n.isAccept);
+      if (n.isStart) setStart(n.id);
+    });
+    snapshot.edges.forEach(e => {
+      addTransition(e.source, e.symbol, e.target);
+    });
+  }, [clearAll, addState, setStart, addTransition]);
+
   // Build DFA nodes/edges from subset result
   const dfaNodes = [];
   const dfaEdges = [];
@@ -159,13 +211,21 @@ export default function NFAPage() {
             title="NFA & Subset Construction"
             subtitle="Build NFAs and watch them transform into equivalent DFAs"
             badge="Non-determinism"
+          />
 
+          {/* Lesson Panel */}
+          <LessonPanel
+            title="NFA — Guided Lesson"
+            description="Understand non-determinism and the power of subset construction"
+            steps={NFA_LESSONS}
+            completedSteps={lessonCompleted}
+            onFinish={() => completeModule('/nfa')}
           />
 
           <Card className="mb-6">
             <MathDisplay math="N = (Q, \Sigma, \delta, q_0, F)" block />
             <p className="text-xs text-text-muted text-center">
-              An NFA's transition function δ maps to sets of states: δ: Q × (Σ ∪ {'{'}ε{'}'}) → P(Q)
+              An NFA's transition function δ maps to sets of states: δ: Q × (Σ ∪ {'ε'}) → P(Q)
             </p>
           </Card>
 
@@ -362,6 +422,13 @@ export default function NFAPage() {
               )}
             </div>
           </div>
+
+          {/* Gallery */}
+          <MachineGallery
+            type="nfa"
+            onGetSnapshot={getSnapshot}
+            onLoadSnapshot={loadSnapshot}
+          />
         </div>
         <Footer />
       </PageWrapper>

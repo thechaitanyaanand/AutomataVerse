@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import AITutor from '@/components/ai/AITutor';
+import '@/styles/crt.css';
 
 const Landing = lazy(() => import('./pages/Landing'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -53,6 +54,8 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+      {/* CRT phosphor shader overlay — renders on top of every page */}
+      <div className="crt-overlay" aria-hidden="true" />
       <Suspense fallback={<PageLoader />}>
         <AnimatedRoutes />
         <AITutor />

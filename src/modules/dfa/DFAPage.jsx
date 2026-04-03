@@ -15,11 +15,36 @@ import AutomataGraph from '@/components/graph/AutomataGraph';
 import TraceLog from '@/components/graph/TraceLog';
 import StringExplorer from '@/components/graph/StringExplorer';
 import SimulationControls from '@/components/graph/SimulationControls';
+import LessonPanel from '@/components/layout/LessonPanel';
+import MachineGallery from '@/components/layout/MachineGallery';
 import useDFAStore, { DFA_EXAMPLES } from '@/store/useDFAStore';
 import useAppStore from '@/store/useAppStore';
 import MathDisplay from '@/components/ui/MathDisplay';
 import { fireConfetti } from '@/lib/confetti';
 import { audio } from '@/lib/audio';
+
+const DFA_LESSONS = [
+  {
+    title: 'What is a DFA?',
+    content: `A **Deterministic Finite Automaton (DFA)** is a model of computation. It reads an input string one symbol at a time and decides whether to **accept** or **reject** it.\n\nFormally, a DFA is a 5-tuple **M = (Q, Σ, δ, q₀, F)** where:\n- **Q** = finite set of states\n- **Σ** = alphabet (set of input symbols)\n- **δ: Q × Σ → Q** = transition function\n- **q₀ ∈ Q** = start state\n- **F ⊆ Q** = set of accept states`,
+  },
+  {
+    title: 'Explore the example machine',
+    content: `The machine loaded is the **Binary Divisible by 3** DFA. It recognizes binary strings whose value is divisible by 3.\n\nFor example: \`0\`, \`11\`, \`110\`, \`1001\` are all accepted.\n\nLook at the graph. States move left to right. The **double circle** state (q0) is the accept state. The arrow marker shows the **start state**.`,
+  },
+  {
+    title: 'Run your first simulation',
+    content: `Type the string \`110\` in the **Input String** box (this is binary for 6, divisible by 3) and click **Simulate**.\n\nThen click **Step Forward** (▶) to watch the machine transition state-by-state through the string. After all steps, the machine will report **ACCEPTED**.`,
+  },
+  {
+    title: 'Understand the Trace Log',
+    content: `The **Simulation Trace** below the controls shows every state transition the DFA made:\n\n\`q0 –[1]→ q1 –[1]→ q0 –[0]→ q0\`  →  **Accepted** ✓\n\nEach row shows: which state the machine was in, what symbol it read, and where it went. This is the δ function in action.`,
+  },
+  {
+    title: 'Explore accepted strings with String Explorer',
+    content: `Scroll down to the **String Explorer** panel. It automatically tests many strings against your DFA and shows which are accepted (✓) and rejected (✗).\n\nCan you guess the pattern? Try changing the example from the **Load Example** dropdown to see a different language!`,
+  },
+];
 
 export default function DFAPage() {
   const store = useDFAStore();
@@ -117,6 +142,35 @@ export default function DFAPage() {
     return steps[steps.length - 1].accepted;
   }, [store]);
 
+  // Lesson progress tracking: step is complete when the user has done the relevant action
+  const lessonCompleted = [
+    true, // step 0: always complete — it's reading
+    nodes.length > 0, // step 1: machine exists
+    simulation !== null, // step 2: ran a simulation
+    simulation?.status === 'done', // step 3: finished a simulation
+    true, // step 4: always available
+  ];
+
+  // Gallery snapshot helpers
+  const getSnapshot = useCallback(() => ({
+    nodes: nodes,
+    edges: edges,
+    alphabet: store.alphabet,
+  }), [nodes, edges, store.alphabet]);
+
+  const loadSnapshot = useCallback((snapshot) => {
+    if (!snapshot) return;
+    store.clearAll();
+    // Reconstruct by re-adding nodes and edges
+    snapshot.nodes.forEach(n => {
+      store.addState(n.id, n.isAccept);
+      if (n.isStart) store.setStart(n.id);
+    });
+    snapshot.edges.forEach(e => {
+      store.addTransition(e.source, e.symbol, e.target);
+    });
+  }, [store]);
+
   const stateOptions = nodes.map(n => ({ value: n.id, label: n.id }));
   const exampleOptions = Object.entries(DFA_EXAMPLES).map(([key, val]) => ({
     value: key,
@@ -132,6 +186,15 @@ export default function DFAPage() {
             title="DFA Simulator"
             subtitle="Build, visualize, and simulate Deterministic Finite Automata"
             badge="Finite Automata"
+          />
+
+          {/* Lesson Panel */}
+          <LessonPanel
+            title="DFA — Guided Lesson"
+            description="Learn the theory and interact with the simulator"
+            steps={DFA_LESSONS}
+            completedSteps={lessonCompleted}
+            onFinish={() => completeModule('/dfa')}
           />
 
           {/* Formal definition */}
@@ -287,6 +350,13 @@ export default function DFAPage() {
                   <TransitionTable nodes={nodes} edges={edges} />
                 </div>
               </Card>
+
+              {/* Machine Gallery */}
+              <MachineGallery
+                type="dfa"
+                onGetSnapshot={getSnapshot}
+                onLoadSnapshot={loadSnapshot}
+              />
 
               {/* Actions */}
               <div className="flex gap-2">

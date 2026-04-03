@@ -12,6 +12,8 @@ import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
 import AutomataGraph from '@/components/graph/AutomataGraph';
+import TraceLog from '@/components/graph/TraceLog';
+import StringExplorer from '@/components/graph/StringExplorer';
 import SimulationControls from '@/components/graph/SimulationControls';
 import MathDisplay from '@/components/ui/MathDisplay';
 import useAppStore from '@/store/useAppStore';
@@ -42,6 +44,10 @@ export default function NFAPage() {
   const [transSymbol, setTransSymbol] = useState('');
   const [transTarget, setTransTarget] = useState('');
   const playRef = useRef(null);
+
+  // For Dual Simulation feature
+  const [compareStr, setCompareStr] = useState('');
+  const [compareResult, setCompareResult] = useState(null);
 
   useEffect(() => {
     loadExample();
@@ -79,7 +85,32 @@ export default function NFAPage() {
     if (!nfa) return;
     const result = nfaToDfa(nfa);
     setSubsetResult(result);
+    setCompareResult(null); // Reset comparison
     setShowSubset(true);
+  };
+
+  const runDualSimulation = () => {
+    if (!subsetResult) return;
+    const nfa = buildNFA();
+    
+    // NFA result
+    const nfaSteps = [...nfa.simulate(compareStr)];
+    const nfaAccepted = nfaSteps[nfaSteps.length - 1].accepted;
+    
+    // DFA result (quick custom traversal over subsetResult graph)
+    let stateStr = setKey(Array.from(subsetResult.dfaStates.values())[0]?.states || []);
+    let dfaPath = [stateStr];
+    for (const char of compareStr) {
+      if(char === 'ε') continue;
+      const tKey = `${stateStr},${char}`;
+      const nextStr = subsetResult.transitions.get(tKey);
+      if (!nextStr) { stateStr = null; break; }
+      stateStr = nextStr;
+      dfaPath.push(stateStr);
+    }
+    const dfaAccepted = stateStr ? !!subsetResult.dfaStates.get(stateStr)?.isAccept : false;
+
+    setCompareResult({ nfa: nfaAccepted, dfa: dfaAccepted, nfaSteps, dfaPath });
   };
 
   const activeStates = new Set();
@@ -91,6 +122,13 @@ export default function NFAPage() {
   }
 
   const stateOptions = nodes.map(n => ({ value: n.id, label: n.id }));
+
+  const simulateNfa = useCallback((str) => {
+    const nfa = buildNFA();
+    if (!nfa) throw new Error("Invalid NFA");
+    const steps = [...nfa.simulate(str)];
+    return steps[steps.length - 1].accepted;
+  }, [buildNFA]);
 
   // Build DFA nodes/edges from subset result
   const dfaNodes = [];
@@ -171,6 +209,12 @@ export default function NFAPage() {
                 />
               </Card>
 
+              {/* Trace Log */}
+              <TraceLog simulation={simulation} />
+
+              {/* String Explorer */}
+              <StringExplorer simulateFn={simulateNfa} alphabet={store.alphabet || ['0', '1']} />
+
               {/* State/Transition management */}
               <Card>
                 <div className="flex justify-between items-center mb-2">
@@ -229,6 +273,47 @@ export default function NFAPage() {
                     edges={dfaEdges}
                     height="350px"
                   />
+
+                  {/* Dual Simulation Comparison Panel */}
+                  <Card className="mt-4 border border-violet-500/30 bg-violet-500/5">
+                    <h4 className="text-sm font-semibold text-violet-300 mb-3 flex items-center gap-2">
+                       <Play size={14} /> Compare: NFA vs DFA Equivalent
+                    </h4>
+                    <div className="flex gap-2 items-end mb-3">
+                      <div className="flex-1">
+                        <Input 
+                           placeholder="Type a string to test..."
+                           value={compareStr}
+                           onChange={e => setCompareStr(e.target.value)}
+                           className="font-mono text-sm"
+                        />
+                      </div>
+                      <Button onClick={runDualSimulation}>Run Both</Button>
+                    </div>
+
+                    {compareResult && (
+                      <div className="grid grid-cols-2 gap-3 mt-4 text-xs font-mono bg-black/40 p-3 rounded-lg border border-white/5">
+                        <div className="flex flex-col gap-1">
+                           <span className="text-text-muted font-sans font-semibold mb-1 border-b border-white/10 pb-1">Original NFA</span>
+                           <div className={`p-2 rounded text-center font-bold ${compareResult.nfa ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
+                             {compareResult.nfa ? '✓ ACCEPTED' : '✗ REJECTED'}
+                           </div>
+                           <div className="text-[10px] text-text-muted mt-1 leading-tight max-h-20 overflow-y-auto pr-1">
+                              {compareResult.nfaSteps.length} computation branch(es) tested.
+                           </div>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                           <span className="text-text-muted font-sans font-semibold mb-1 border-b border-white/10 pb-1">Equivalent DFA</span>
+                           <div className={`p-2 rounded text-center font-bold ${compareResult.dfa ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}`}>
+                             {compareResult.dfa ? '✓ ACCEPTED' : '✗ REJECTED'}
+                           </div>
+                           <div className="text-[10px] text-text-muted mt-1 leading-tight max-h-20 overflow-y-auto pr-1">
+                              Path: {compareResult.dfaPath.join(' → ') || 'Rejected'}
+                           </div>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
 
                   {/* DFA States mapping */}
                   <Card className="mt-4">

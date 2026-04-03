@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Text, Float, ContactShadows } from '@react-three/drei';
 import * as THREE from 'three';
@@ -115,12 +115,14 @@ export default function TMTape3D({ tape = new Map(), headPosition = 0, blankSymb
         <directionalLight castShadow position={[5, 10, 5]} intensity={1.5} color="#E8459B" />
         <directionalLight position={[-5, 5, -5]} intensity={1} color="#34D399" />
         
-        <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2}>
-          <Scene tape={tape} headPosition={headPosition} blankSymbol={blankSymbol} />
-        </Float>
-        
-        <ContactShadows position={[0, -2.5, 0]} opacity={0.4} scale={20} blur={2} far={4} color="#E8459B" />
-        <Environment preset="city" />
+        <Suspense fallback={null}>
+          <Float speed={2} rotationIntensity={0.1} floatIntensity={0.2}>
+            <Scene tape={tape} headPosition={headPosition} blankSymbol={blankSymbol} />
+          </Float>
+          
+          <ContactShadows position={[0, -2.5, 0]} opacity={0.4} scale={20} blur={2} far={4} color="#E8459B" />
+          <Environment preset="city" />
+        </Suspense>
       </Canvas>
     </div>
   );

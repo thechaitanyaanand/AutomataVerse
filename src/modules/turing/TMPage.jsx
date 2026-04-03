@@ -13,6 +13,7 @@ import Badge from '@/components/ui/Badge';
 import Slider from '@/components/ui/Slider';
 import MathDisplay from '@/components/ui/MathDisplay';
 import TMTape3D from '@/components/three/TMTape3D';
+import TraceLog from '@/components/graph/TraceLog';
 import useTMStore, { TM_EXAMPLES } from '@/store/useTMStore';
 import useAppStore from '@/store/useAppStore';
 import { fireConfetti } from '@/lib/confetti';
@@ -224,6 +225,9 @@ export default function TMPage() {
               </div>
             </Card>
           </div>
+
+          {/* Trace Log */}
+          <TraceLog simulation={simulation} className="mt-6" />
         </div>
         <Footer />
       </PageWrapper>

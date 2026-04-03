@@ -12,6 +12,8 @@ import Select from '@/components/ui/Select';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
 import AutomataGraph from '@/components/graph/AutomataGraph';
+import TraceLog from '@/components/graph/TraceLog';
+import StringExplorer from '@/components/graph/StringExplorer';
 import SimulationControls from '@/components/graph/SimulationControls';
 import useDFAStore, { DFA_EXAMPLES } from '@/store/useDFAStore';
 import useAppStore from '@/store/useAppStore';
@@ -108,6 +110,13 @@ export default function DFAPage() {
     }
   }
 
+  const simulateDfa = useCallback((str) => {
+    const dfa = store.buildDFA();
+    if (!dfa) throw new Error("Invalid DFA");
+    const steps = [...dfa.simulate(str)];
+    return steps[steps.length - 1].accepted;
+  }, [store]);
+
   const stateOptions = nodes.map(n => ({ value: n.id, label: n.id }));
   const exampleOptions = Object.entries(DFA_EXAMPLES).map(([key, val]) => ({
     value: key,
@@ -180,6 +189,12 @@ export default function DFAPage() {
                   onSpeedChange={setSpeed}
                 />
               </Card>
+
+              {/* Trace Log */}
+              <TraceLog simulation={simulation} />
+
+              {/* String Explorer */}
+              <StringExplorer simulateFn={simulateDfa} alphabet={store.alphabet} />
             </div>
 
             {/* Control Panel — Right Sidebar */}

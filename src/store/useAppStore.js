@@ -8,6 +8,8 @@ const useAppStore = create(
       sidebarOpen: false,
       completedModules: [],
       quizScore: 0,
+      savedMachines: [],
+      geminiApiKey: '',
 
       setActivePage: (page) => set({ activePage: page }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
@@ -19,13 +21,22 @@ const useAppStore = create(
       })),
       addQuizScore: (points) => set((s) => ({ quizScore: s.quizScore + points })),
       resetQuizScore: () => set({ quizScore: 0 }),
+      saveMachine: (machine) => set((s) => ({
+        savedMachines: [...s.savedMachines, { ...machine, id: Date.now().toString() }]
+      })),
+      deleteMachine: (id) => set((s) => ({
+        savedMachines: s.savedMachines.filter(m => m.id !== id)
+      })),
+      setGeminiApiKey: (key) => set({ geminiApiKey: key }),
     }),
     {
       name: 'automataverse-progress-storage', // unique name
       partialize: (state) => ({ 
         completedModules: state.completedModules, 
-        quizScore: state.quizScore 
-      }), // Persist only progress, not active page or sidebar state
+        quizScore: state.quizScore,
+        savedMachines: state.savedMachines,
+        geminiApiKey: state.geminiApiKey,
+      }), // Persist progress and saved machines
     }
   )
 );

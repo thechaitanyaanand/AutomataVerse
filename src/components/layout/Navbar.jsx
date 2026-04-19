@@ -95,7 +95,7 @@ export default function Navbar() {
               </div>
 
               <Link to="/dfa"
-                className="ml-3 px-6 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-flora to-flora-deep text-white hover:shadow-lg hover:shadow-flora/25 transition-all duration-300"
+                className="ml-3 px-6 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-flora to-flora-deep text-white hover:shadow-lg hover:shadow-flora/25 transition-all duration-300 cursor-target"
               >
                 Start Learning
               </Link>

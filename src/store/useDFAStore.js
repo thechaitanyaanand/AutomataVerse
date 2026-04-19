@@ -69,17 +69,24 @@ const useDFAStore = create((set, get) => ({
   selectedExample: 'binary_div3',
 
   // Node actions
-  addState: (label, isAccept = false) => set((s) => {
+  // Node actions
+  addState: (label, isAccept = false, position = null) => set((s) => {
     const id = label || `q${s.nodes.length}`;
-    const positions = s.nodes.map(n => n.position);
-    const maxX = Math.max(...positions.map(p => p.x), 200);
+    
+    let newPos = position;
+    if (!newPos) {
+      const positions = s.nodes.map(n => n.position);
+      const maxX = Math.max(...positions.map(p => p.x), 200);
+      newPos = { x: maxX + 150, y: 200 + Math.random() * 100 - 50 };
+    }
+
     return {
       nodes: [...s.nodes, {
         id,
         label: id,
         isStart: s.nodes.length === 0,
         isAccept,
-        position: { x: maxX + 150, y: 200 + Math.random() * 100 - 50 }
+        position: newPos
       }]
     };
   }),
@@ -115,6 +122,10 @@ const useDFAStore = create((set, get) => ({
 
   removeTransition: (id) => set((s) => ({
     edges: s.edges.filter(e => e.id !== id)
+  })),
+
+  updateTransition: (id, newSymbol) => set((s) => ({
+    edges: s.edges.map(e => e.id === id ? { ...e, symbol: newSymbol } : e)
   })),
 
   setAlphabet: (alpha) => set({ alphabet: alpha }),

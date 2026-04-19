@@ -1,9 +1,13 @@
 import { useEffect, useRef, useCallback } from 'react';
 import cytoscape from 'cytoscape';
+import edgehandles from 'cytoscape-edgehandles';
+
+cytoscape.use(edgehandles);
 
 export default function AutomataGraph({
   nodes = [], edges = [], activeStates = new Set(), activeEdge = null,
-  onNodeClick, onNodeDoubleClick, className = '', height = '500px',
+  onNodeClick, onNodeDoubleClick, onBackgroundDoubleClick, onConnectEdge, onEdgeClick,
+  className = '', height = '500px',
 }) {
   const containerRef = useRef(null);
   const cyRef = useRef(null);
@@ -20,14 +24,29 @@ export default function AutomataGraph({
       });
     }
 
+    // Group parallel edges to show combined labels
     const edgeMap = new Map();
     for (const edge of edges) {
       const key = `${edge.source}->${edge.target}`;
-      if (!edgeMap.has(key)) edgeMap.set(key, { ...edge, symbols: [edge.symbol] });
-      else edgeMap.get(key).symbols.push(edge.symbol);
+      if (!edgeMap.has(key)) edgeMap.set(key, { ...edge, symbols: [edge.symbol], ids: [edge.id] });
+      else {
+        edgeMap.get(key).symbols.push(edge.symbol);
+        edgeMap.get(key).ids.push(edge.id);
+      }
     }
     for (const [, edge] of edgeMap) {
-      elements.push({ data: { id: edge.id, source: edge.source, target: edge.target, label: edge.symbols.join(', ') } });
+      const allEmpty = edge.symbols.every(s => s === '_' || s === '');
+      const label = allEmpty ? '?' : edge.symbols.join(', ');
+      elements.push({
+        data: {
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          label,
+          edgeIds: edge.ids,
+          isEmpty: allEmpty,
+        }
+      });
     }
 
     const cy = cytoscape({
@@ -101,6 +120,15 @@ export default function AutomataGraph({
           }
         },
         {
+          selector: 'edge[?isEmpty]',
+          style: {
+            'line-color': '#E8459B44',
+            'target-arrow-color': '#E8459B44',
+            'line-style': 'dashed',
+            'color': '#E8459BAA',
+          }
+        },
+        {
           selector: 'edge[source = target]',
           style: { 'curve-style': 'loop', 'loop-direction': '-45deg', 'loop-sweep': '90deg' }
         },
@@ -108,6 +136,45 @@ export default function AutomataGraph({
           selector: 'edge.active',
           style: { 'line-color': '#34D399', 'target-arrow-color': '#34D399', 'width': 3.5, 'z-index': 10 }
         },
+        {
+          selector: 'edge:hover',
+          style: {
+            'line-color': '#E8459B',
+            'target-arrow-color': '#E8459B',
+            'width': 3.5,
+          }
+        },
+        // Edgehandles styles
+        {
+          selector: '.eh-handle',
+          style: {
+            'display': 'none', // Hide the handle, we use right-click drag now
+            'opacity': 0,
+            'width': 0,
+            'height': 0
+          }
+        },
+        {
+          selector: '.eh-source',
+          style: { 'border-width': 4, 'border-color': '#E8459B' }
+        },
+        {
+          selector: '.eh-target',
+          style: { 'border-width': 4, 'border-color': '#34D399' }
+        },
+        {
+          selector: '.eh-preview, .eh-ghost-edge',
+          style: {
+            'background-color': '#E8459B',
+            'line-color': '#E8459B',
+            'target-arrow-color': '#E8459B',
+            'source-arrow-color': '#E8459B'
+          }
+        },
+        {
+          selector: '.eh-ghost-edge.eh-preview-active',
+          style: { 'opacity': 0 }
+        }
       ],
       layout: { name: 'preset' },
       userZoomingEnabled: true,
@@ -119,9 +186,48 @@ export default function AutomataGraph({
 
     if (onNodeClick) cy.on('tap', 'node', (e) => onNodeClick(e.target.id()));
     if (onNodeDoubleClick) cy.on('dbltap', 'node', (e) => onNodeDoubleClick(e.target.id()));
+
+    if (onEdgeClick) {
+      cy.on('tap', 'edge', (e) => {
+        const edgeEl = e.target;
+        const edgeIds = edgeEl.data('edgeIds') || [edgeEl.id()];
+        const source = edgeEl.data('source');
+        const target = edgeEl.data('target');
+        const currentLabel = edgeEl.data('label');
+        onEdgeClick({ edgeIds, source, target, currentLabel });
+      });
+    }
+
+    if (onBackgroundDoubleClick) {
+      cy.on('dbltap', (e) => {
+        if (e.target === cy) onBackgroundDoubleClick(e.position);
+      });
+    }
+
+    if (onConnectEdge) {
+      const eh = cy.edgehandles({ 
+        snap: true, 
+        hoverDelay: 50, 
+        handleNodes: 'node',
+        noEdgeEventsInDraw: true,
+        disableBrowserContextMenu: true // Prevent right-click menu during connection
+      });
+
+      // Listen for right-click start on nodes
+      cy.on('cxttapstart', 'node', (e) => {
+        eh.start(e.target);
+      });
+
+      cy.on('ehcomplete', (event, sourceNode, targetNode, addedEles) => {
+        addedEles.remove();
+        onConnectEdge(sourceNode.id(), targetNode.id());
+      });
+    }
+
     cy.nodes().grabify();
     cyRef.current = cy;
-  }, [nodes, edges, onNodeClick, onNodeDoubleClick]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, edges]);
 
   useEffect(() => {
     initCy();
@@ -143,6 +249,8 @@ export default function AutomataGraph({
     }
   }, [activeStates, activeEdge]);
 
+  const isInteractive = !!(onBackgroundDoubleClick || onConnectEdge);
+
   return (
     <div className={`relative rounded-2xl overflow-hidden border border-border bg-void/50 ${className}`}>
       <div ref={containerRef} style={{ height, width: '100%' }} />
@@ -150,6 +258,11 @@ export default function AutomataGraph({
         <div className="absolute top-4 left-4 flex items-center gap-3 text-xs text-text-muted bg-void/70 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-border">
           <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-emerald inline-block" /> Start</span>
           <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full border-2 border-flora inline-block" /> Accept</span>
+        </div>
+      )}
+      {isInteractive && (
+        <div className="absolute bottom-3 right-3 text-[10px] text-text-muted/50 bg-void/60 backdrop-blur-sm px-2 py-1 rounded-lg border border-border/30 pointer-events-none">
+          Double-click canvas → add state &nbsp;·&nbsp; Right-click drag → connect &nbsp;·&nbsp; Click edge → edit
         </div>
       )}
     </div>

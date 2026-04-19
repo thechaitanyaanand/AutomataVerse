@@ -21,6 +21,8 @@ import MachineGallery from '@/components/layout/MachineGallery';
 import useAppStore from '@/store/useAppStore';
 import useNFAStore from '@/store/useNFAStore';
 import { nfaToDfa, setKey } from '@/lib/subset-construction';
+import AITutor from '@/components/tutor/AITutor';
+import InputQueue from '@/components/viz/InputQueue';
 import { fireConfetti } from '@/lib/confetti';
 import { audio } from '@/lib/audio';
 
@@ -54,7 +56,7 @@ export default function NFAPage() {
   const { nodes, edges, inputString, simulation, speed,
     setInputString, startSimulation, stepForward, stepBackward,
     resetSimulation, loadExample, addState, addTransition,
-    removeState, removeTransition, toggleAccept, setStart,
+    removeState, removeTransition, updateTransition, toggleAccept, setStart,
     setSpeed, clearAll, buildNFA,
   } = store;
 
@@ -69,6 +71,10 @@ export default function NFAPage() {
   const [transSymbol, setTransSymbol] = useState('');
   const [transTarget, setTransTarget] = useState('');
   const playRef = useRef(null);
+  // Edit transition modal
+  const [editTransModal, setEditTransModal] = useState(false);
+  const [editEdgeIds, setEditEdgeIds] = useState([]);
+  const [editSymbol, setEditSymbol] = useState('');
 
   // For Dual Simulation feature
   const [compareStr, setCompareStr] = useState('');
@@ -202,6 +208,19 @@ export default function NFAPage() {
     }
   }
 
+  const systemContext = `You are a helpful AI Tutor for AutomataVerse. The user is currently in the NFA (Non-deterministic Finite Automaton) module.
+Current States: ${nodes.map(n => `${n.id}${n.isStart ? ' (Start)' : ''}${n.isAccept ? ' (Accept)' : ''}`).join(', ')}
+Current Transitions: ${edges.map(e => `${e.source} -[${e.symbol}]-> ${e.target}`).join(', ')}
+Alphabet: {${store.alphabet.join(', ')}}
+
+You can answer questions, explain concepts, or use tools to modify the graph on the user's behalf. Be concise.`;
+
+  const toolsContext = {
+    addState,
+    addTransition,
+    clearAll
+  };
+
   return (
     <>
       <Navbar />
@@ -239,6 +258,15 @@ export default function NFAPage() {
                 nodes={nodes}
                 edges={edges}
                 activeStates={activeStates}
+                onBackgroundDoubleClick={(pos) => addState(null, false, pos)}
+                onConnectEdge={(source, target) => {
+                  addTransition(source, '_', target);
+                }}
+                onEdgeClick={({ edgeIds, currentLabel }) => {
+                  setEditEdgeIds(edgeIds);
+                  setEditSymbol(currentLabel === '?' ? '' : currentLabel);
+                  setEditTransModal(true);
+                }}
                 height="350px"
               />
 
@@ -267,6 +295,14 @@ export default function NFAPage() {
                   onTogglePlay={() => setIsPlaying(!isPlaying)}
                   onSpeedChange={setSpeed}
                 />
+                {simulation && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <InputQueue
+                      inputString={inputString}
+                      headIndex={simulation.steps[simulation.currentStep]?.inputIndex ?? 0}
+                    />
+                  </div>
+                )}
               </Card>
 
               {/* Trace Log */}
@@ -450,6 +486,38 @@ export default function NFAPage() {
           <Input label="Symbol (ε for epsilon)" value={transSymbol} onChange={(e) => setTransSymbol(e.target.value)} placeholder="a" />
           <Select label="To" value={transTarget} onChange={setTransTarget} options={[{value:'',label:'Select...'}, ...stateOptions]} />
           <Button onClick={() => { addTransition(transSource, transSymbol, transTarget); setTransSymbol(''); setAddTransModal(false); }} className="w-full">Add</Button>
+        </div>
+      </Modal>
+
+      <AITutor systemContext={systemContext} toolsContext={toolsContext} />
+
+      {/* Edit Transition Modal */}
+      <Modal open={editTransModal} onClose={() => setEditTransModal(false)} title="Edit Transition">
+        <div className="space-y-4">
+          <p className="text-xs text-text-muted">Edit symbol (use ε for epsilon / free transition).</p>
+          <Input
+            label="Symbol"
+            value={editSymbol}
+            onChange={(e) => setEditSymbol(e.target.value)}
+            placeholder="a, b, ε ..."
+            autoFocus
+          />
+          <Button
+            onClick={() => {
+              if (editSymbol.trim()) editEdgeIds.forEach(id => updateTransition(id, editSymbol.trim()));
+              setEditTransModal(false);
+            }}
+            className="w-full"
+          >
+            Save Symbol
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => { editEdgeIds.forEach(id => removeTransition(id)); setEditTransModal(false); }}
+            className="w-full"
+          >
+            Delete Transition(s)
+          </Button>
         </div>
       </Modal>
     </>

@@ -12,15 +12,21 @@ const useNFAStore = create((set, get) => ({
   selectedNode: null,
   subsetConstruction: null, // { steps, dfaStates, dfaTransitions }
 
-  addState: (label, isAccept = false) => set((s) => {
+  addState: (label, isAccept = false, position = null) => set((s) => {
     const id = label || `q${s.nodes.length}`;
+    
+    let newPos = position;
+    if (!newPos) {
+      newPos = { x: 150 + s.nodes.length * 150, y: 200 };
+    }
+
     return {
       nodes: [...s.nodes, {
         id,
         label: id,
         isStart: s.nodes.length === 0,
         isAccept,
-        position: { x: 150 + s.nodes.length * 150, y: 200 }
+        position: newPos
       }]
     };
   }),
@@ -44,6 +50,10 @@ const useNFAStore = create((set, get) => ({
 
   removeTransition: (id) => set((s) => ({
     edges: s.edges.filter(e => e.id !== id)
+  })),
+
+  updateTransition: (id, newSymbol) => set((s) => ({
+    edges: s.edges.map(e => e.id === id ? { ...e, symbol: newSymbol } : e)
   })),
 
   setInputString: (str) => set({ inputString: str }),

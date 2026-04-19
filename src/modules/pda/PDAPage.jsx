@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import PageWrapper from '@/components/layout/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -10,8 +9,11 @@ import Input from '@/components/ui/Input';
 import Badge from '@/components/ui/Badge';
 import AutomataGraph from '@/components/graph/AutomataGraph';
 import MathDisplay from '@/components/ui/MathDisplay';
+import StackViz from '@/components/viz/StackViz';
+import InputQueue from '@/components/viz/InputQueue';
 import usePDAStore from '@/store/usePDAStore';
 import useAppStore from '@/store/useAppStore';
+import AITutor from '@/components/tutor/AITutor';
 import { fireConfetti } from '@/lib/confetti';
 import { audio } from '@/lib/audio';
 import { Play } from 'lucide-react';
@@ -22,7 +24,29 @@ export default function PDAPage() {
   
   const completeModule = useAppStore(state => state.completeModule);
 
+  // Simulate a simple push/pop stack to demonstrate the concept
+  // We derive the stack from the input string for the aⁿbⁿ PDA example
+  const [simStep, setSimStep] = useState(0);
+  const [simRunning, setSimRunning] = useState(false);
+  const inputChars = inputString.split('');
+  const aCount = inputChars.filter(c => c === 'a').length;
+  const bRead = Math.min(simStep > aCount ? simStep - aCount : 0, aCount);
+  const pdaStack = simRunning
+    ? ['$', ...Array(Math.max(0, aCount - bRead)).fill('a')]
+    : ['$'];
+  const pdaHead = simRunning ? Math.min(simStep, inputChars.length) : 0;
+
   useEffect(() => { loadExample(); }, [loadExample]);
+
+  const systemContext = `You are a helpful AI Tutor for AutomataVerse. The user is currently in the PDA (Pushdown Automaton) module.
+Current States: ${nodes.map(n => `${n.id}${n.isStart ? ' (Start)' : ''}${n.isAccept ? ' (Accept)' : ''}`).join(', ')}
+Current CFG: ${cfgText}
+You can answer questions, explain context-free languages, or help write a Pushdown Automaton. Be concise.`;
+
+  const toolsContext = {
+    // PDA doesn't have exposed dynamic additions in store yet, but we will pass basic ones
+    clearAll: usePDAStore.getState().clearAll
+  };
 
   return (
     <>
@@ -54,21 +78,23 @@ export default function PDAPage() {
 
               {/* Stack Visualization */}
               <Card>
-                <h3 className="text-sm font-semibold text-text-primary mb-3">Stack</h3>
-                <div className="flex items-end gap-1 min-h-[120px] justify-center">
-                  {['$', 'a', 'a'].map((sym, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="w-12 h-12 flex items-center justify-center border border-violet/30 bg-violet/10 rounded-lg text-sm font-mono text-text-primary"
-                    >
-                      {sym}
-                    </motion.div>
-                  ))}
+                <div className="flex items-start gap-6 flex-wrap">
+                  <div className="flex-1 min-w-[120px]">
+                    <StackViz
+                      stack={pdaStack}
+                      label="PDA Stack"
+                      accentColor="violet"
+                    />
+                  </div>
+                  {simRunning && (
+                    <div className="flex-1">
+                      <InputQueue
+                        inputString={inputString}
+                        headIndex={pdaHead}
+                      />
+                    </div>
+                  )}
                 </div>
-                <p className="text-xs text-text-muted text-center mt-2">← Top of Stack</p>
               </Card>
             </div>
 
@@ -98,10 +124,23 @@ export default function PDAPage() {
                   </div>
                 </div>
                 <Button className="w-full" size="lg" onClick={() => {
-                  audio.playSuccess();
-                  fireConfetti();
-                  completeModule('/pda');
-                  // further simulation logic when implemented
+                  setSimStep(0);
+                  setSimRunning(true);
+                  // step forward through the string every 600ms
+                  const total = inputString.length;
+                  let step = 0;
+                  const interval = setInterval(() => {
+                    step++;
+                    setSimStep(step);
+                    if (step > total) {
+                      clearInterval(interval);
+                      const aCount = inputString.split('').filter(c => c === 'a').length;
+                      const bCount = inputString.split('').filter(c => c === 'b').length;
+                      if (aCount === bCount && aCount > 0) {
+                        completeModule('/pda');
+                      }
+                    }
+                  }, 600);
                 }}>
                   <Play size={14} /> Simulate PDA
                 </Button>
@@ -140,6 +179,7 @@ export default function PDAPage() {
         </div>
         <Footer />
       </PageWrapper>
+      <AITutor systemContext={systemContext} toolsContext={toolsContext} />
     </>
   );
 }

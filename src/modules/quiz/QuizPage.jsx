@@ -97,7 +97,9 @@ export default function QuizPage() {
       audio.playTick();
       setCurrentIdx(i => i + 1);
     } else {
-      fireConfetti();
+      if (correct === questions.length) {
+        fireConfetti();
+      }
       setQuestions(Array.from({ length: 5 }, generateQuestion));
       setCurrentIdx(0);
       useAppStore.getState().completeModule('/quiz');

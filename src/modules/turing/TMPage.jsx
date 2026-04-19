@@ -17,8 +17,10 @@ import TraceLog from '@/components/graph/TraceLog';
 import LessonPanel from '@/components/layout/LessonPanel';
 import useTMStore, { TM_EXAMPLES } from '@/store/useTMStore';
 import useAppStore from '@/store/useAppStore';
+import AITutor from '@/components/tutor/AITutor';
 import { fireConfetti } from '@/lib/confetti';
 import { audio } from '@/lib/audio';
+import InputQueue from '@/components/viz/InputQueue';
 
 const TM_LESSONS = [
   {
@@ -96,6 +98,18 @@ export default function TMPage() {
     label: val.name,
   }));
 
+  const systemContext = `You are a helpful AI Tutor for AutomataVerse. The user is currently in the Turing Machine module.
+Currently loaded machine: ${example?.name || 'Custom'}
+Current State: ${step?.state || 'N/A'}, Head Position: ${step?.head || 0}
+You can answer questions, explain concepts, or switch examples on the user's behalf. Be concise.`;
+
+  const toolsContext = {
+    loadExample: (exampleId) => {
+      setSelectedExample(exampleId);
+      resetSimulation();
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -132,22 +146,35 @@ export default function TMPage() {
             />
 
             {/* Status bar */}
-            <div className="flex items-center justify-between mt-4 px-2">
-              <div className="flex items-center gap-4 text-xs">
-                <span className="text-text-muted">
-                  State: <span className="text-violet-light font-mono">{step?.state ?? example?.start ?? '—'}</span>
-                </span>
-                <span className="text-text-muted">
-                  Head: <span className="text-cyan-light font-mono">{step?.head ?? 0}</span>
-                </span>
-                <span className="text-text-muted">
-                  Steps: <span className="text-text-primary font-mono">{step?.stepCount ?? 0}</span>
-                </span>
+            <div className="flex flex-col gap-4 mt-4 px-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs">
+                  <span className="text-text-muted">
+                    State: <span className="text-violet-light font-mono">{step?.state ?? example?.start ?? '—'}</span>
+                  </span>
+                  <span className="text-text-muted">
+                    Head: <span className="text-cyan-light font-mono">{step?.head ?? 0}</span>
+                  </span>
+                  <span className="text-text-muted">
+                    Steps: <span className="text-text-primary font-mono">{step?.stepCount ?? 0}</span>
+                  </span>
+                </div>
+                {step?.phase && step.phase !== 'compute' && (
+                  <Badge variant={step.phase === 'accepted' ? 'success' : step.phase === 'rejected' ? 'danger' : 'warning'}>
+                    {step.phase.toUpperCase()}
+                  </Badge>
+                )}
               </div>
-              {step?.phase && step.phase !== 'compute' && (
-                <Badge variant={step.phase === 'accepted' ? 'success' : step.phase === 'rejected' ? 'danger' : 'warning'}>
-                  {step.phase.toUpperCase()}
-                </Badge>
+              
+              {/* Input Queue Visualization */}
+              {simulation && (
+                <div className="pt-4 border-t border-white/5">
+                  <InputQueue 
+                    inputString={inputString} 
+                    headIndex={step?.head ?? 0} 
+                  />
+                  <p className="text-[9px] text-text-muted mt-1 uppercase tracking-tighter">Tape Reader View</p>
+                </div>
               )}
             </div>
           </Card>
@@ -270,6 +297,7 @@ export default function TMPage() {
         </div>
         <Footer />
       </PageWrapper>
+      <AITutor systemContext={systemContext} toolsContext={toolsContext} />
     </>
   );
 }

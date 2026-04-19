@@ -8,15 +8,24 @@ const usePDAStore = create((set, get) => ({
   speed: 500,
   cfgText: 'S -> aSb | ε',
 
-  addState: (label, isAccept = false) => set((s) => ({
-    nodes: [...s.nodes, {
-      id: label || `q${s.nodes.length}`,
-      label: label || `q${s.nodes.length}`,
-      isStart: s.nodes.length === 0,
-      isAccept,
-      position: { x: 150 + s.nodes.length * 200, y: 200 }
-    }]
-  })),
+  addState: (label, isAccept = false, position = null) => set((s) => {
+    const id = label || `q${s.nodes.length}`;
+    
+    let newPos = position;
+    if (!newPos) {
+      newPos = { x: 150 + s.nodes.length * 200, y: 200 };
+    }
+
+    return {
+      nodes: [...s.nodes, {
+        id,
+        label: id,
+        isStart: s.nodes.length === 0,
+        isAccept,
+        position: newPos
+      }]
+    };
+  }),
 
   removeState: (id) => set((s) => ({
     nodes: s.nodes.filter(n => n.id !== id),

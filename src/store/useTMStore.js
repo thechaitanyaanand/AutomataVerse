@@ -98,20 +98,100 @@ export const TM_EXAMPLES = {
 const useTMStore = create((set, get) => ({
   selectedExample: 'palindrome',
   inputString: 'abba',
-  simulation: null, // { steps: [config], currentStep, status }
+  simulation: null,
   speed: 300,
   isPlaying: false,
-  transitionTableData: [], // for editor
+  // Custom graph editor
+  nodes: [],
+  edges: [],
+  useCustomGraph: false,
 
   setInputString: (str) => set({ inputString: str }),
   setSpeed: (speed) => set({ speed }),
-  setSelectedExample: (key) => set({ selectedExample: key }),
+  setSelectedExample: (key) => { set({ selectedExample: key, useCustomGraph: false }); },
+
+  // Graph mutators
+  addState: (label, isAccept = false, position = null) => set((s) => {
+    const id = label || `q${s.nodes.length}`;
+    if (s.nodes.find(n => n.id === id)) return {};
+    let newPos = position;
+    if (!newPos) {
+      const xs = s.nodes.map(n => n.position?.x ?? 100);
+      newPos = { x: (xs.length ? Math.max(...xs) + 150 : 100), y: 200 + Math.random() * 60 - 30 };
+    }
+    return {
+      useCustomGraph: true,
+      nodes: [...s.nodes, { id, label: id, isStart: s.nodes.length === 0, isAccept, position: newPos }]
+    };
+  }),
+
+  removeState: (id) => set((s) => ({
+    nodes: s.nodes.filter(n => n.id !== id),
+    edges: s.edges.filter(e => e.source !== id && e.target !== id),
+  })),
+
+  toggleAccept: (id) => set((s) => ({
+    nodes: s.nodes.map(n => n.id === id ? { ...n, isAccept: !n.isAccept } : n)
+  })),
+
+  setStart: (id) => set((s) => ({
+    nodes: s.nodes.map(n => ({ ...n, isStart: n.id === id }))
+  })),
+
+  addTransition: (source, symbol, target) => set((s) => ({
+    useCustomGraph: true,
+    edges: [...s.edges, { id: `te_${Date.now()}_${Math.random()}`, source, target, symbol }]
+  })),
+
+  removeTransition: (id) => set((s) => ({
+    edges: s.edges.filter(e => e.id !== id)
+  })),
+
+  updateTransition: (id, newSymbol) => set((s) => ({
+    edges: s.edges.map(e => e.id === id ? { ...e, symbol: newSymbol } : e)
+  })),
+
+  clearAll: () => set({ nodes: [], edges: [], simulation: null, isPlaying: false, useCustomGraph: false }),
+
+  // Parse graph edges into TM transitions map
+  // Edge label format: "read → write, dir"  e.g. "a → X, R" or "_ → _, L"
+  buildTMFromGraph: () => {
+    const { nodes, edges } = get();
+    const startNode = nodes.find(n => n.isStart);
+    const acceptNode = nodes.find(n => n.isAccept);
+    if (!startNode) return null;
+    const transitions = new Map();
+    for (const e of edges) {
+      // Parse "read → write, dir"
+      const match = e.symbol?.match(/^(.+?)\s*→\s*(.+?)\s*,\s*([LR])$/i);
+      if (!match) continue;
+      const [, read, write, dir] = match;
+      transitions.set(`${e.source},${read.trim()}`, {
+        write: write.trim(),
+        direction: dir.toUpperCase(),
+        nextState: e.target,
+      });
+    }
+    const stateIds = nodes.map(n => n.id);
+    return new TuringMachine({
+      states: stateIds,
+      alphabet: [...new Set(edges.map(e => (e.symbol?.match(/^(.+?)\s*→/)?.[1]?.trim())).filter(Boolean))],
+      tapeAlphabet: [...new Set([...edges.map(e => e.symbol?.match(/^(.+?)\s*→/)?.[1]?.trim()), ...edges.map(e => e.symbol?.match(/→\s*(.+?)\s*,/)?.[1]?.trim()), '_'].filter(Boolean))],
+      blank: '_',
+      transitions,
+      start: startNode.id,
+      accept: acceptNode?.id ?? stateIds[stateIds.length - 1],
+      reject: stateIds.find(id => id !== startNode.id && id !== acceptNode?.id) ?? startNode.id,
+    });
+  },
+
+  transitionTableData: [],
 
   buildTM: () => {
-    const { selectedExample } = get();
+    const { selectedExample, useCustomGraph, buildTMFromGraph } = get();
+    if (useCustomGraph) return buildTMFromGraph();
     const example = TM_EXAMPLES[selectedExample];
     if (!example) return null;
-
     const transitions = new Map(Object.entries(example.transitions));
     return new TuringMachine({
       states: example.states,
@@ -129,12 +209,8 @@ const useTMStore = create((set, get) => ({
     const { buildTM, inputString } = get();
     const tm = buildTM();
     if (!tm) return;
-
     const steps = [...tm.run(inputString)];
-    set({
-      simulation: { steps, currentStep: 0, status: 'running' },
-      isPlaying: false,
-    });
+    set({ simulation: { steps, currentStep: 0, status: 'running' }, isPlaying: false });
   },
 
   stepForward: () => set((s) => {

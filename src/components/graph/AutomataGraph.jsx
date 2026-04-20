@@ -213,9 +213,14 @@ export default function AutomataGraph({
         disableBrowserContextMenu: true // Prevent right-click menu during connection
       });
 
-      // Listen for right-click start on nodes
+      // Ctrl+Right-Click → instant self-loop; plain Right-Click drag → connect
       cy.on('cxttapstart', 'node', (e) => {
-        eh.start(e.target);
+        if (e.originalEvent?.ctrlKey || e.originalEvent?.metaKey) {
+          // Self-loop: immediately connect node to itself
+          onConnectEdge(e.target.id(), e.target.id());
+        } else {
+          eh.start(e.target);
+        }
       });
 
       cy.on('ehcomplete', (event, sourceNode, targetNode, addedEles) => {
@@ -262,7 +267,7 @@ export default function AutomataGraph({
       )}
       {isInteractive && (
         <div className="absolute bottom-3 right-3 text-[10px] text-text-muted/50 bg-void/60 backdrop-blur-sm px-2 py-1 rounded-lg border border-border/30 pointer-events-none">
-          Double-click canvas → add state &nbsp;·&nbsp; Right-click drag → connect &nbsp;·&nbsp; Click edge → edit
+          Double-click → add state &nbsp;·&nbsp; Right-drag → connect &nbsp;·&nbsp; Ctrl+Right-click → self loop &nbsp;·&nbsp; Click edge → edit
         </div>
       )}
     </div>

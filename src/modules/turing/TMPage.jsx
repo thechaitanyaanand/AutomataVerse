@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Pause, SkipForward, SkipBack, RotateCcw } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, RotateCcw, GitBranch } from 'lucide-react';
 import PageWrapper from '@/components/layout/PageWrapper';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -8,11 +8,13 @@ import SectionHeader from '@/components/layout/SectionHeader';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import Modal from '@/components/ui/Modal';
 import Select from '@/components/ui/Select';
 import Badge from '@/components/ui/Badge';
 import Slider from '@/components/ui/Slider';
 import MathDisplay from '@/components/ui/MathDisplay';
 import TMTape3D from '@/components/three/TMTape3D';
+import AutomataGraph from '@/components/graph/AutomataGraph';
 import TraceLog from '@/components/graph/TraceLog';
 import LessonPanel from '@/components/layout/LessonPanel';
 import useTMStore, { TM_EXAMPLES } from '@/store/useTMStore';
@@ -48,12 +50,20 @@ const TM_LESSONS = [
 export default function TMPage() {
   const {
     selectedExample, inputString, simulation, speed, isPlaying,
+    nodes, edges, useCustomGraph,
     setInputString, setSpeed, setSelectedExample,
     startSimulation, stepForward, stepBackward, setPlaying, resetSimulation,
+    addState, addTransition, updateTransition, removeTransition, clearAll,
   } = useTMStore();
 
   const completeModule = useAppStore(state => state.completeModule);
   const playRef = useRef(null);
+
+  // Edit transition modal
+  const [editTransModal, setEditTransModal] = useState(false);
+  const [editEdgeIds, setEditEdgeIds] = useState([]);
+  const [editSymbol, setEditSymbol] = useState('');
+  const [showCustomGraph, setShowCustomGraph] = useState(false);
 
   useEffect(() => {
     if (isPlaying && simulation && simulation.status !== 'done') {
@@ -99,15 +109,21 @@ export default function TMPage() {
   }));
 
   const systemContext = `You are a helpful AI Tutor for AutomataVerse. The user is currently in the Turing Machine module.
-Currently loaded machine: ${example?.name || 'Custom'}
+Currently loaded machine: ${useCustomGraph ? 'Custom (graph editor)' : (example?.name || 'N/A')}
+Custom States: ${nodes.map(n => `${n.id}${n.isStart ? ' (Start)' : ''}${n.isAccept ? ' (Accept)' : ''}`).join(', ') || 'none'}
+Custom Transitions: ${edges.map(e => `${e.source} --[${e.symbol}]--> ${e.target}`).join('; ') || 'none'}
 Current State: ${step?.state || 'N/A'}, Head Position: ${step?.head || 0}
-You can answer questions, explain concepts, or switch examples on the user's behalf. Be concise.`;
+
+IMPORTANT — When building a custom Turing Machine, use the graph editor tools.
+Edge label format: "read → write, direction" where direction is L or R.
+Examples: "0 → X, R" | "_ → _, L" | "a → Y, R"
+Call addState to add states, then addTransition for each rule.
+You can answer questions, explain computability, or build a custom TM.`;
 
   const toolsContext = {
-    loadExample: (exampleId) => {
-      setSelectedExample(exampleId);
-      resetSimulation();
-    }
+    addState,
+    addTransition,
+    clearAll,
   };
 
   return (
@@ -134,6 +150,43 @@ You can answer questions, explain concepts, or switch examples on the user's beh
             <p className="text-xs text-text-muted text-center">
               δ: Q × Γ → Q × Γ × {'{'}L, R{'}'} — read symbol, write symbol, move head
             </p>
+          </Card>
+
+          {/* Custom TM Graph Editor */}
+          <Card className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <GitBranch size={16} className="text-violet-light" />
+                <h3 className="text-sm font-semibold text-text-primary">Custom TM Graph Editor</h3>
+                {useCustomGraph && <Badge variant="violet">Active</Badge>}
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => setShowCustomGraph(v => !v)}>
+                {showCustomGraph ? 'Collapse' : 'Expand'}
+              </Button>
+            </div>
+
+            {showCustomGraph && (
+              <>
+                <p className="text-xs text-text-muted mb-3">
+                  Build a custom TM. Edge format: <code className="text-violet-light">read → write, L|R</code> — e.g. <code>0 → X, R</code>. Double-click canvas to add states.
+                </p>
+                <AutomataGraph
+                  nodes={nodes}
+                  edges={edges}
+                  height="320px"
+                  onBackgroundDoubleClick={(pos) => addState(null, false, pos)}
+                  onConnectEdge={(source, target) => addTransition(source, '_ → _, R', target)}
+                  onEdgeClick={({ edgeIds, currentLabel }) => {
+                    setEditEdgeIds(edgeIds);
+                    setEditSymbol(currentLabel === '?' ? '' : currentLabel);
+                    setEditTransModal(true);
+                  }}
+                />
+                <div className="flex gap-2 mt-3">
+                  <Button variant="danger" size="sm" onClick={clearAll}>Clear Custom Graph</Button>
+                </div>
+              </>
+            )}
           </Card>
 
           {/* Tape Visualization */}
@@ -298,6 +351,39 @@ You can answer questions, explain concepts, or switch examples on the user's beh
         <Footer />
       </PageWrapper>
       <AITutor systemContext={systemContext} toolsContext={toolsContext} />
+
+      {/* Edit TM Transition Modal */}
+      <Modal open={editTransModal} onClose={() => setEditTransModal(false)} title="Edit TM Transition">
+        <div className="space-y-4">
+          <p className="text-xs text-text-muted">
+            Format: <code className="text-violet-light">read → write, L|R</code><br />
+            e.g. <code>0 → X, R</code> or <code>_ → _, L</code>
+          </p>
+          <Input
+            label="Transition Rule"
+            value={editSymbol}
+            onChange={(e) => setEditSymbol(e.target.value)}
+            placeholder="0 → X, R"
+            autoFocus
+          />
+          <Button
+            onClick={() => {
+              if (editSymbol.trim()) editEdgeIds.forEach(id => updateTransition(id, editSymbol.trim()));
+              setEditTransModal(false);
+            }}
+            className="w-full"
+          >
+            Save
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => { editEdgeIds.forEach(id => removeTransition(id)); setEditTransModal(false); }}
+            className="w-full"
+          >
+            Delete Transition(s)
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
